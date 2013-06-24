@@ -1,0 +1,17 @@
+/* General styles */
+body { font-size: 16px; font-family: 'Open Sans', sans-serif; }
+h1, h2 { margin: 5px 0 5px 0; }
+h1 { font-size: 36px; }
+h2 { font-size: 24px; }
+
+/* Common styles */
+.hidden { display: none; }
+
+/* Specfic styles */
+header { height: 160px; margin: auto; text-align: center; padding-top: 40px;}
+section { text-align: center; }
+input { width: 300px; font-size: 16px; }
+button { width: 150px; font-size: 16px; }
+.feedback { margin-top: 40px; }
+.feedback img { vertical-align: middle; }
+.feedback span { margin-left: 10px; }
