@@ -63,7 +63,7 @@ module Pdfer
     end
 
     def download_files (url_list)
-      puts "Downloading into temp dir #{@temp_dir}"
+      $log.info "Downloading into temp dir #{@temp_dir}"
       file_list = []
       url_list.each do |url|
         if not url =~ /^http/i
@@ -75,22 +75,23 @@ module Pdfer
           url += filename
         end
         filename = File.basename(url)
-        print "Downloading #{url}..."
+        $log.info "Downloading #{url}..."
         uri = URI.parse(url)
         response = Net::HTTP.get(uri)
         open(File.join(@temp_dir, filename), "w") { |file|
           file.write(response)
         }
         file_list << File.join(@temp_dir, filename)
-        puts " done.\n"
       end
       file_list
     end
 
     def concatenate (file_list, pdf)
+      $log.info "Starting concatenation"
       input_string = ""
       file_list.each { |filename, i| input_string << filename << " " }
       `gs -dBATCH -dNOPAUSE -q -sDEVICE=pdfwrite -sOutputFile=#{pdf} #{input_string}`
+      $log.info "Finished concatenation"
       $?.exitstatus
     end
 

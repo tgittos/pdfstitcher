@@ -2,8 +2,17 @@ require 'rubygems'
 require 'bundler/setup'
 require 'sinatra'
 require 'json'
+require 'logger'
+
+# set up logging
+
+$log = Logger.new('./logs/sinatra.log')
+
+# require dependencies
 require './lib/pdfer'
 require './lib/sweeper'
+
+# routes
 
 get '/' do
   erb :index, :layout => :'layouts/main'
