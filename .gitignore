@@ -2,3 +2,4 @@ public/pdfs/**/
 downloads/**/
 .rbenv*
 .ruby-version
+sinatra.log
