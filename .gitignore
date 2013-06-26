@@ -3,3 +3,4 @@ downloads/**/
 .rbenv*
 .ruby-version
 sinatra.log
+config/settings.rb

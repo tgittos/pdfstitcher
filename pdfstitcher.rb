@@ -11,6 +11,7 @@ $log = Logger.new('./logs/sinatra.log')
 # require dependencies
 require './lib/pdfer'
 require './lib/sweeper'
+require './config/settings.rb'
 
 # routes
 
