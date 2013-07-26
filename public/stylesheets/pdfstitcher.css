@@ -9,6 +9,7 @@ h2 { font-size: 24px; }
 
 /* Specfic styles */
 header { height: 160px; margin: auto; text-align: center; padding-top: 40px;}
+header p { font-size: 12px; color: #bdbdbd; width: 550px; margin: auto; margin-top: 20px; font-weight: normal; line-height: 16px;}
 section { text-align: center; }
 input { width: 300px; font-size: 16px; }
 button { width: 150px; font-size: 16px; }
