@@ -24,7 +24,7 @@ post '/stitch' do
     { :success => false, :message => "You need a URL!" }.to_json
   else
     filename = "#{(0...16).map{(65+rand(26)).chr}.join}.pdf"
-    file = Pdfer::Pdfer.new.compile_pdf(params[:url], filename)
+    file = Pdfer::Pdfer.new.compile_pdf(:url => params[:url], :filename => filename)
     { :success => true, :pdf => file }.to_json
   end
 end

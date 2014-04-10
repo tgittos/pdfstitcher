@@ -11,10 +11,21 @@
 require 'net/http'
 require 'uri'
 require 'fileutils'
+require 'optparse'
+require 'date'
+require 'logger'
 
 module Pdfer
 
   class Pdfer
+
+    def log
+      $log ||= Logger.new(STDOUT)
+    end
+
+    def url
+      @options[:url]
+    end
 
     def initialize
       @temp_dir = "downloads/tmp_#{(0...16).map{(65+rand(26)).chr}.join}"
@@ -22,26 +33,34 @@ module Pdfer
       @download_dir = "/pdfs/"
     end
 
-    def compile_pdf (url, pdf)
-      @url = url
+    def compile_pdf(options)
+      @options = options
+      log.info "Got options: #{@options.inspect}" if @options[:debug]
       # prep work
       today = Date.today.strftime("%Y%m%d")
       dir = File.join(@out_dir, today)
-      filename = File.join(dir, pdf)
-      dl_filename = File.join(@download_dir, today, pdf)
+      filename = File.join(dir, @options[:filename])
+      dl_filename = File.join(@download_dir, today, @options[:filename])
       FileUtils.mkdir_p(@temp_dir) unless File.directory?(@temp_dir)
       FileUtils.mkdir_p(dir) unless File.directory?(dir)
       # do the work
-      content = fetch_page url
+      content = fetch_page @options[:url]
       url_list = build_url_list content
       file_list = download_files url_list
       status = concatenate file_list, filename
-      clean_temp_files
+      clean_temp_files unless @options[:debug]
       dl_filename
     end
 
-    def download_pdfs (url)
-      @url = url
+    def concat_pdfs(options)
+      @options = options
+      dir = File.join(@options[:concat_only], "*")
+      files = Dir[dir].reject{|p| %W{. ..}.include?(p) }
+      log.info "Concatenating #{files.inspect} from #{dir}"
+      concatenate(files, @options[:filename])
+    end
+
+    def download_pdfs(url)
       content = fetch_page url
       url_list = build_url_list content
       download_files url_list
@@ -49,34 +68,33 @@ module Pdfer
 
     private
 
-    def fetch_page (url)
+    def fetch_page(url)
+      log.info "Downloading #{url.inspect}"
       uri = URI.parse(url)
       Net::HTTP.get(uri)
     end
 
-    def build_url_list (text)
+    def build_url_list(text)
       url_list = []
       text.scan /href=["|']{1}([^"|']*)["|']/i do |match|
-        url_list << match[0] if match[0] =~ /\.pdf$/ and not url_list.include? match[0]
+        if match[0] =~ /\.pdf$/i and not url_list.include?(match[0])
+          url_list << match[0]
+          log.info "Found link to #{match[0]}"
+        end
       end
       url_list
     end
 
     def download_files (url_list)
-      $log.info "Downloading into temp dir #{@temp_dir}"
+      log.info "Downloading into temp dir #{@temp_dir}"
       file_list = []
-      url_list.each do |url|
-        if not url =~ /^http/i
-          filename = url
-          url = ""
-          @url.split('/').each_with_index do |segment, i|
-            url << segment + '/' if i < @url.split('/').length - 1
-          end
-          url += filename
+      url_list.each_with_index do |local_url, i|
+        if not local_url =~ /^http/i
+          local_url = URI.join(url, local_url).to_s
         end
-        filename = File.basename(url)
-        $log.info "Downloading #{url}..."
-        uri = URI.parse(url)
+        filename = "#{sprintf('%02d', i)}_#{File.basename(local_url)}"
+        log.info "Downloading #{local_url}..."
+        uri = URI.parse(local_url)
         response = Net::HTTP.get(uri)
         open(File.join(@temp_dir, filename), "w") { |file|
           file.write(response)
@@ -87,11 +105,12 @@ module Pdfer
     end
 
     def concatenate (file_list, pdf)
-      $log.info "Starting concatenation"
+      log.info "Starting concatenation"
       input_string = ""
       file_list.each { |filename, i| input_string << filename << " " }
+      log.info "executing `gs -dBATCH -dNOPAUSE -q -sDEVICE=pdfwrite -sOutputFile=#{pdf} #{input_string}`"
       `gs -dBATCH -dNOPAUSE -q -sDEVICE=pdfwrite -sOutputFile=#{pdf} #{input_string}`
-      $log.info "Finished concatenation"
+      log.info "Finished concatenation"
       $?.exitstatus
     end
 
@@ -105,19 +124,40 @@ end
 
 # Run it if we're calling from a command line
 if __FILE__ == $0
-  if ARGV.length == 2 and ARGV[0] == "-download"
-    pdfer = Pdfer::Pdfer.new
-    pdfer.download_pdfs ARGV[1]
+
+  options = {
+    :debug => false,
+    :filename => "output.pdf"
+  }
+
+  op = OptionParser.new do |opts|
+    opts.banner = "Usage: pdfer.rb [options] url"
+
+    opts.on("-d", "--debug", "Run in debug mode (don't delete downloaded pdf files)") do |d|
+      options[:debug] = true
+    end
+
+    opts.on("-o", "--output [filename]", "Output pdf file") do |o|
+      options[:filename] = o
+    end
+
+    opts.on("-c" "--concatenate-only [dir]", "Concatenate the files in a given directory") do |c|
+      options[:concat_only] = c
+    end
+
+  end
+  op.parse!
+
+  if !options[:concat_only] && ARGV.length < 1
+    puts op.help
   else
-    if ARGV.length < 2
-      puts "Usage: ruby pdfer.rb url output-pdf\n"
-      puts "where\n"
-      puts "url\t\t\turl with list of PDF links\n"
-      puts "output-pdf\t\tname of the PDF file to create\n"
-    else  
-      # Run it!
-      pdfer = Pdfer::Pdfer.new
-      pdfer.compile_pdf ARGV[0], ARGV[1]
+    options[:url] = ARGV.shift
+    pdfer = Pdfer::Pdfer.new
+    if !options[:concat_only]
+      pdfer.compile_pdf(options)
+    else
+      pdfer.concat_pdfs(options)
     end
   end
+
 end
