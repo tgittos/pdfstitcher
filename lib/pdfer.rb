@@ -58,6 +58,7 @@ module Pdfer
       files = Dir[dir].reject{|p| %W{. ..}.include?(p) }
       log.info "Concatenating #{files.inspect} from #{dir}"
       concatenate(files, @options[:filename])
+      @options[:filename]
     end
 
     def download_pdfs(url)
@@ -106,8 +107,7 @@ module Pdfer
 
     def concatenate (file_list, pdf)
       log.info "Starting concatenation"
-      input_string = ""
-      file_list.each { |filename, i| input_string << filename << " " }
+      input_string = file_list.collect { |filename, i| "\"#{filename}\"" }.join(" ")
       log.info "executing `gs -dBATCH -dNOPAUSE -q -sDEVICE=pdfwrite -sOutputFile=#{pdf} #{input_string}`"
       `gs -dBATCH -dNOPAUSE -q -sDEVICE=pdfwrite -sOutputFile=#{pdf} #{input_string}`
       log.info "Finished concatenation"
@@ -141,7 +141,7 @@ if __FILE__ == $0
       options[:filename] = o
     end
 
-    opts.on("-c" "--concatenate-only [dir]", "Concatenate the files in a given directory") do |c|
+    opts.on("-c", "--concatenate-only [dir]", "Concatenate the files in a given directory") do |c|
       options[:concat_only] = c
     end
 

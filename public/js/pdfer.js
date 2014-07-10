@@ -16,7 +16,7 @@
   };
 
   $(document).ready(function(){
-    $('button').click(function(){
+    $('button.url').click(function(){
       var url = $('input').val();
       $.ajax({
         type: 'POST',

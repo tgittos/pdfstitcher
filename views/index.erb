@@ -1,14 +1,33 @@
-<header>
-  <h1>PDF Stitcher</h1>
-  <h2>Give me a URL, I'll give you a PDF file</h2>
-  <p>Simply give me a page with a list of links to PDF files, and I'll combine them into a single PDF file. Useful for compiling books posted online with separate PDF files for each chapter.</p>
-</header>
-<section>
+
+<h1>PDF Stitcher</h1>
+<section class="url-stitch">
+  <header>
+    <h2>Give me a URL, I'll give you a PDF file</h2>
+    <p>Simply give me a page with a list of links to PDF files, and I'll combine them into a single PDF file. Useful for compiling books posted online with separate PDF files for each chapter.</p>
+  </header>
   <div>
     <input type="text" name="url" />
-    <button type="submit">Stitch it!</button>
+    <button type="submit" class="url">Stitch it!</button>
   </div>
   <div class="feedback hidden">
+    <img src="/images/loader.gif" alt="Loading spinning thing" />
+    <span></span>
+  </div>
+</section>
+<p class="or">or</p>
+<section class="upload-stitch">
+  <header>
+    <h2>Drag PDF files on me, and I'll give you a PDF file</h2>
+    <p>Simply drag and drop PDF files below and when you're done, I'll combine them into a single PDF file. Useful for compiling stuff you've printed to PDF.</p>
+  </header>
+  <div class="dragon-drop">
+  </div>
+  <div class="files-list" style="display: none">
+  </div>
+  <div>
+    <button type="submit" class="dragon-drop-submit">Stitch them!</button>
+  </div>
+  <div class="dragon-drop-feedback hidden">
     <img src="/images/loader.gif" alt="Loading spinning thing" />
     <span></span>
   </div>
